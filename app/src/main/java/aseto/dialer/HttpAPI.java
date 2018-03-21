@@ -38,7 +38,7 @@ public class HttpAPI extends AsyncTask<String, String, String> {
             URL obj = new URL(url);
             con = (HttpsURLConnection) obj.openConnection();
 
-            con.setConnectTimeout(2000);
+            con.setConnectTimeout(4000);
 
             //add reuqest header
             con.setRequestMethod("POST");

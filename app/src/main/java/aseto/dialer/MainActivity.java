@@ -13,9 +13,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.Toast;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 public class MainActivity extends AppCompatActivity {
 
-    private Threads Threads = new Threads();
     private Context context = this;
 
     @Override
@@ -31,18 +33,38 @@ public class MainActivity extends AppCompatActivity {
 
         HttpAPI HttpAPI = new HttpAPI(new AsyncResponse() {
             @Override
-            public void processFinish(String callbackResponse) {
-                Popup(callbackResponse);
+            public void processFinish(String response) {
+                JSONObject jsonObject;
+
+                try {
+                    jsonObject = new JSONObject(response);
+                    String strStatus = jsonObject.getString("status");
+
+                    if(strStatus.equals("OK")) {
+                        int strInterval = jsonObject.getInt("interval");
+                        Threads Threads = new Threads();
+                        Threads.mainThread(strInterval);
+
+                        Popup("Urządzenie zalogowane do systemu, uruchomino usługę i oczekuję na instrukcje!");
+                    } else {
+                        Popup("Wykryto nowe urządzenie!");
+                        startActivity(new Intent(MainActivity.this, LoginActivity.class));
+                        finish();
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
             }
         });
 
-        String androidId = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
+        String androidId = getAndroidId();
 
         HttpAPI.execute("https://sulkowski.it/aseto/api.php", "{logme: '" + androidId + "'}");
     }
 
     private void makeCall(final String phoneNumber) {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+            Popup("Brak uprawnień! Sprawdź uprawnienia aplikacji (CALL_PHONE)");
             return;
         }
 
@@ -58,9 +80,12 @@ public class MainActivity extends AppCompatActivity {
         toast.show();
     }
 
+    public String getAndroidId() {
+        return Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
+    }
+
     private boolean isNetworkAvailable() {
-        ConnectivityManager connectivityManager
-                = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
