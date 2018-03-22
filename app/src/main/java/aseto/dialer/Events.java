@@ -18,6 +18,8 @@ public class Events {
             JO.put("type", type);
             JO.put("phoneNumber", phoneNumber);
             JO.put("length", length);
+            JO.put("start", dateStart);
+            JO.put("end", dateEnd);
 
             String jsonString = JO.toString();
 
