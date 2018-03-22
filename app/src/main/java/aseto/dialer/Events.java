@@ -10,7 +10,7 @@ import java.util.Date;
  */
 
 public class Events {
-    protected static void newCall(String type, String phoneNumber, Date dateStart, Date dateEnd) {
+    public static void newCall(String type, String phoneNumber, Date dateStart, Date dateEnd) {
         try {
             int length = (int) (dateEnd.getTime()-dateStart.getTime())/1000;
             JSONObject JO = new JSONObject();
