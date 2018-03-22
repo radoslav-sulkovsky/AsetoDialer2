@@ -30,7 +30,7 @@ public class CallReceiver extends CallDetector {
 
     @Override
     protected void onOutgoingCallStarted(Context ctx, String number, Date start) {
-        // Events.newCall("outgoingstart", number, start, end);
+        Events.newCall("outgoingstart", number, start, start);
         outgoingCallInProcess = true;
     }
 
