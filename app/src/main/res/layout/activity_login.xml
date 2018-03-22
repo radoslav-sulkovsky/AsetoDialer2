@@ -8,7 +8,9 @@
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        tools:layout_editor_absoluteX="0dp"
+        tools:layout_editor_absoluteY="85dp">
 
         <TextView
             android:id="@+id/deviceId"
@@ -17,6 +19,26 @@
             android:layout_alignParentTop="true"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="116dp"
-            android:text="deviceId" />
+            android:text="deviceId"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/deviceId"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="75dp"
+            android:text="Dodaj identyfikator do systemu i spróbuj ponownie" />
+
+        <Button
+            android:id="@+id/tryAgain"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/textView"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="77dp"
+            android:text="Spróbuj ponownie" />
     </RelativeLayout>
 </android.support.constraint.ConstraintLayout>

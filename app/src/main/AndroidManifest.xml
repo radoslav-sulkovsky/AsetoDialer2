@@ -35,5 +35,4 @@
 
         <activity android:name=".LoginActivity"></activity>
     </application>
-
 </manifest>
