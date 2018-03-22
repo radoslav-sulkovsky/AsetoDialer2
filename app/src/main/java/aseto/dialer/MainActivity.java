@@ -17,7 +17,6 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.view.KeyEvent;
 import android.widget.Toast;
 
 import org.json.JSONException;
@@ -61,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
                         int strInterval = jsonObject.getInt("interval");
                         mainThread(strInterval);
                         showNotification();
-                        Popup("Urządzenie zalogowane do systemu, uruchomino usługę i oczekuję na instrukcje!");
+                        Popup("Urządzenie zalogowane do systemu!");
                     } else {
                         Popup("Wykryto nowe urządzenie!");
                         startActivity(new Intent(MainActivity.this, LoginActivity.class));
@@ -158,7 +157,7 @@ public class MainActivity extends AppCompatActivity {
         handler = new Handler();
         runnable = new Runnable() {
             public void run() {
-                if(!CallReceiver.outgoingCallInProcess) {
+                if(!CallReceiver.outgoingCallInProcess && !CallReceiver.incomingCallInProcess) {
                     HttpAPI HttpAPI = new HttpAPI(new AsyncResponse() {
 
                         @Override
@@ -169,7 +168,7 @@ public class MainActivity extends AppCompatActivity {
                                 jsonObject = new JSONObject(response);
                                 String strAction = jsonObject.getString("action");
 
-                                if (strAction.equals("makecall")) {
+                                if(strAction.equals("makecall")) {
                                     String strMsisdn = jsonObject.getString("msisdn");
                                     Popup("Nowe zadanie! Wykonuję połączenie do " + strMsisdn);
 
@@ -183,7 +182,7 @@ public class MainActivity extends AppCompatActivity {
                         }
                     });
 
-                    HttpAPI.execute("https://aseto.ecallcenter.pl/android/action.php", "{}");
+                    HttpAPI.execute("https://aseto.ecallcenter.pl/android/action.php", "{deviceId: '"+ getAndroidId() +"'}");
                 }
 
                 handler.postDelayed(runnable, interval * 1000);
