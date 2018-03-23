@@ -82,8 +82,9 @@ public class MainActivity extends AppCompatActivity {
                             showNotification();
                             Popup("Urządzenie zalogowane do systemu!");
                         } else {
-                            Popup("Nieprawidłowy interwał, Zamykam aplikację");
+                            Popup("Nieprawidłowy interwał, zamykam aplikację");
                             finish();
+                            return;
                         }
                     } else {
                         Popup("Wykryto nowe urządzenie!");
@@ -187,12 +188,12 @@ public class MainActivity extends AppCompatActivity {
 
         mNotificationManager.notify(0, mBuilder.build());
     }
-    //endregion
 
     public static void cancelNotification(Context ctx, int notifyId) {
         NotificationManager mNotificationManager = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
         mNotificationManager.cancel(notifyId);
     }
+    //endregion
 
     public boolean isJSON(String test) {
         try {
