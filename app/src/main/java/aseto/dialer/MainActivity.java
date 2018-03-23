@@ -17,8 +17,10 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.telephony.SmsManager;
 import android.widget.Toast;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -32,6 +34,8 @@ public class MainActivity extends AppCompatActivity {
     private Handler handler = null;
     private static Runnable runnable = null;
 
+    private static final int PERMISSION_REQUEST_CODE = 1;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,26 +45,46 @@ public class MainActivity extends AppCompatActivity {
         androidId = getAndroidId();
 
         if(!isNetworkAvailable()) {
-            Popup("Brak połączenia z internetem, zamykam aplikację.");
+            Popup("Brak połączenia z internetem, zamykam aplikację");
             finish();
             return;
+        }
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            if (checkSelfPermission(Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_DENIED) {
+                String[] permissions = {Manifest.permission.SEND_SMS};
+                requestPermissions(permissions, PERMISSION_REQUEST_CODE);
+            }
+
+            if (checkSelfPermission(Manifest.permission.RECEIVE_SMS) == PackageManager.PERMISSION_DENIED) {
+                String[] permissions = {Manifest.permission.RECEIVE_SMS};
+                requestPermissions(permissions, PERMISSION_REQUEST_CODE);
+            }
+
+            if (checkSelfPermission(Manifest.permission.READ_SMS) == PackageManager.PERMISSION_DENIED) {
+                String[] permissions = {Manifest.permission.READ_SMS};
+                requestPermissions(permissions, PERMISSION_REQUEST_CODE);
+            }
         }
 
         HttpAPI HttpAPI = new HttpAPI(new AsyncResponse() {
 
             @Override
             public void processFinish(String response) {
-                JSONObject jsonObject;
-
                 try {
-                    jsonObject = new JSONObject(response);
+                    JSONObject jsonObject = new JSONObject(response);
                     String strStatus = jsonObject.getString("status");
 
                     if(strStatus.equals("OK")) {
                         int strInterval = jsonObject.getInt("interval");
-                        mainThread(strInterval);
-                        showNotification();
-                        Popup("Urządzenie zalogowane do systemu!");
+                        if(strInterval > 0) {
+                            mainThread(strInterval);
+                            showNotification();
+                            Popup("Urządzenie zalogowane do systemu!");
+                        } else {
+                            Popup("Nieprawidłowy interwał, Zamykam aplikację");
+                            finish();
+                        }
                     } else {
                         Popup("Wykryto nowe urządzenie!");
                         startActivity(new Intent(MainActivity.this, LoginActivity.class));
@@ -72,19 +96,24 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        HttpAPI.execute("https://aseto.ecallcenter.pl/android/api.php", "{logme: '" + androidId + "'}");
-    }
+        try {
+            JSONObject JO = new JSONObject();
+            JO.put("logme", androidId);
 
-    @Override
-    protected void onDestroy() {
-        cancelNotification(context, 0);
-        super.onDestroy();
+            String jsonString = JO.toString();
+
+            HttpAPI.execute("https://aseto.ecallcenter.pl/android/api.php", jsonString);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void onBackPressed() {
-        if (doubleBackToExitPressedOnce) {
+        if(doubleBackToExitPressedOnce) {
             super.onBackPressed();
+            cancelNotification(context, 0);
+            System.exit(0);
             return;
         }
 
@@ -100,6 +129,7 @@ public class MainActivity extends AppCompatActivity {
         }, 2000);
     }
 
+    //region actions
     private void makeCall(final String phoneNumber) {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
             Popup("Brak uprawnień! Sprawdź uprawnienia aplikacji (CALL_PHONE)");
@@ -108,6 +138,16 @@ public class MainActivity extends AppCompatActivity {
 
         startActivity(new Intent(Intent.ACTION_CALL, Uri.fromParts("tel", phoneNumber, null)));
     }
+
+    private void sendSms(final String msisdn, final String message) {
+        try {
+            SmsManager sms = SmsManager.getDefault();
+            sms.sendTextMessage(msisdn, null, message, null, null);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    //endregion
 
     private void Popup(String toastMessage) {
         Context context = getApplicationContext();
@@ -128,7 +168,7 @@ public class MainActivity extends AppCompatActivity {
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
-    // notifications
+    //region notifications
     private void showNotification() {
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context.getApplicationContext(), "aseto001");
 
@@ -147,10 +187,26 @@ public class MainActivity extends AppCompatActivity {
 
         mNotificationManager.notify(0, mBuilder.build());
     }
+    //endregion
 
     public static void cancelNotification(Context ctx, int notifyId) {
         NotificationManager mNotificationManager = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
         mNotificationManager.cancel(notifyId);
+    }
+
+    public boolean isJSON(String test) {
+        try {
+            new JSONObject(test);
+        } catch (JSONException ex) {
+            // edited, to include @Arthur's comment
+            // e.g. in case JSONArray is valid as well...
+            try {
+                new JSONArray(test);
+            } catch (JSONException ex1) {
+                return false;
+            }
+        }
+        return true;
     }
 
     protected void mainThread(final int interval) {
@@ -162,19 +218,35 @@ public class MainActivity extends AppCompatActivity {
 
                         @Override
                         public void processFinish(String response) {
-                            JSONObject jsonObject;
-
                             try {
+                                JSONObject jsonObject;
+
+                                if(!isJSON(response)) {
+                                    Popup("Brak nowych zadań!");
+                                    return;
+                                }
+
                                 jsonObject = new JSONObject(response);
+
                                 String strAction = jsonObject.getString("action");
+                                String strMsisdn;
 
-                                if(strAction.equals("makecall")) {
-                                    String strMsisdn = jsonObject.getString("msisdn");
-                                    Popup("Nowe zadanie! Wykonuję połączenie do " + strMsisdn);
+                                switch(strAction) {
+                                    case "makecall":
+                                        strMsisdn = jsonObject.getString("msisdn");
+                                        Popup("Nowe zadanie! Wykonuję połączenie do " + strMsisdn);
 
-                                    makeCall(strMsisdn);
-                                } else {
-                                    Popup("Brak nowych zadań");
+                                        makeCall(strMsisdn);
+                                        break;
+                                    case "sendsms":
+                                        strMsisdn = jsonObject.getString("msisdn");
+                                        String strMessage = jsonObject.getString("message");
+                                        Popup("Nowe zadanie! Wysłano SMS do " + strMsisdn);
+
+                                        sendSms(strMsisdn, strMessage);
+                                        break;
+                                    default:
+                                        Popup("Brak nowych zadań");
                                 }
                             } catch (JSONException e) {
                                 e.printStackTrace();
@@ -182,7 +254,16 @@ public class MainActivity extends AppCompatActivity {
                         }
                     });
 
-                    HttpAPI.execute("https://aseto.ecallcenter.pl/android/action.php", "{deviceId: '"+ getAndroidId() +"'}");
+                    try {
+                        JSONObject JO = new JSONObject();
+                        JO.put("deviceId", androidId);
+
+                        String jsonString = JO.toString();
+
+                        HttpAPI.execute("https://aseto.ecallcenter.pl/android/action.php", jsonString);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
                 }
 
                 handler.postDelayed(runnable, interval * 1000);

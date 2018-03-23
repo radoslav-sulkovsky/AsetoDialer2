@@ -14,7 +14,7 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        TextView textDeviceId = (TextView) findViewById(R.id.deviceId);
+        TextView textDeviceId = findViewById(R.id.deviceId);
         textDeviceId.setText(MainActivity.androidId);
 
         final Button button = findViewById(R.id.tryAgain);

@@ -13,36 +13,36 @@ public class CallReceiver extends CallDetector {
     @Override
     protected void onIncomingCallReceived(Context ctx, String number, Date start) {
         incomingCallInProcess = true;
-        Events.newCall("new", number, start, Calendar.getInstance().getTime());
+        Events.newCall("incoming", "new", number, start, Calendar.getInstance().getTime());
         Toast.makeText(ctx, "Połączenie przychodzące z numeru " + number, Toast.LENGTH_SHORT).show();
     }
 
     @Override
     protected void onIncomingCallAnswered(Context ctx, String number, Date start) {
-        Events.newCall("answered", number, start, Calendar.getInstance().getTime());
+        Events.newCall("incoming","answered", number, start, Calendar.getInstance().getTime());
     }
 
     @Override
     protected void onIncomingCallEnded(Context ctx, String number, Date start, Date end) {
-        Events.newCall("incoming", number, start, end);
+        Events.newCall("incoming","ended", number, start, end);
         incomingCallInProcess = false;
     }
 
     @Override
     protected void onOutgoingCallStarted(Context ctx, String number, Date start) {
-        // Events.newCall("outgoingstart", number, start, end);
+        Events.newCall("outgoing","new", number, start, Calendar.getInstance().getTime());
         outgoingCallInProcess = true;
     }
 
     @Override
     protected void onOutgoingCallEnded(Context ctx, String number, Date start, Date end) {
-        Events.newCall("outgoing", number, start, end);
+        Events.newCall("outgoing", "ended", number, start, end);
         outgoingCallInProcess = false;
     }
 
     @Override
     protected void onMissedCall(Context ctx, String number, Date start) {
-        Events.newCall("missed", number, start, Calendar.getInstance().getTime());
+        Events.newCall("incoming", "missed", number, start, Calendar.getInstance().getTime());
         outgoingCallInProcess = false;
         incomingCallInProcess = false;
     }
