@@ -23,12 +23,14 @@ public class SmsReceiver extends BroadcastReceiver {
             String smsSender = "";
             String smsBody = "";
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                for (SmsMessage smsMessage : Telephony.Sms.Intents.getMessagesFromIntent(intent)) {
-                    smsSender = smsMessage.getDisplayOriginatingAddress();
-                    smsBody += smsMessage.getMessageBody();
-                }
-            } else {
+            /* if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) { */
+
+            for (SmsMessage smsMessage : Telephony.Sms.Intents.getMessagesFromIntent(intent)) {
+                smsSender = smsMessage.getDisplayOriginatingAddress();
+                smsBody += smsMessage.getMessageBody();
+            }
+            
+            /* } else {
                 Bundle smsBundle = intent.getExtras();
                 if (smsBundle != null) {
                     Object[] pdus = (Object[]) smsBundle.get("pdus");
@@ -42,7 +44,7 @@ public class SmsReceiver extends BroadcastReceiver {
                     }
                     smsSender = messages[0].getOriginatingAddress();
                 }
-            }
+            } */
 
             Events.newSms(smsSender, smsBody, Calendar.getInstance().getTime());
         }
