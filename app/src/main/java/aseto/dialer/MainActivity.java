@@ -92,7 +92,6 @@ public class MainActivity extends AppCompatActivity {
                         } else {
                             Popup("Nieprawidłowy interwał, zamykam aplikację");
                             finish();
-                            return;
                         }
                     } else {
                         Popup("Wykryto nowe urządzenie!");
@@ -160,10 +159,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void Popup(String toastMessage) {
         Context context = getApplicationContext();
-        CharSequence text = toastMessage;
         int duration = Toast.LENGTH_SHORT;
 
-        Toast toast = Toast.makeText(context, text, duration);
+        Toast toast = Toast.makeText(context, toastMessage, duration);
         toast.show();
     }
 
@@ -181,6 +179,8 @@ public class MainActivity extends AppCompatActivity {
     private void showNotification() {
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context.getApplicationContext(), "aseto001");
 
+
+
         mBuilder.setSmallIcon(R.mipmap.ic_launcher_round);
         mBuilder.setContentTitle("Aseto Dialer");
         mBuilder.setContentText("Aplikacja jest uruchomiona");
@@ -188,6 +188,7 @@ public class MainActivity extends AppCompatActivity {
         mBuilder.setOngoing(true);
 
         NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        assert mNotificationManager != null;
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel("aseto001","Channel human readable title", NotificationManager.IMPORTANCE_DEFAULT);
@@ -199,6 +200,8 @@ public class MainActivity extends AppCompatActivity {
 
     public static void cancelNotification(Context ctx, int notifyId) {
         NotificationManager mNotificationManager = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
+
+        assert mNotificationManager != null;
         mNotificationManager.cancel(notifyId);
     }
     //endregion
@@ -207,8 +210,6 @@ public class MainActivity extends AppCompatActivity {
         try {
             new JSONObject(test);
         } catch (JSONException ex) {
-            // edited, to include @Arthur's comment
-            // e.g. in case JSONArray is valid as well...
             try {
                 new JSONArray(test);
             } catch (JSONException ex1) {
