@@ -45,8 +45,16 @@ public class MainActivity extends AppCompatActivity {
         androidId = getAndroidId();
 
         if(!isNetworkAvailable()) {
-            Popup("Brak połączenia z internetem, zamykam aplikację");
-            finish();
+            Popup("Brak połączenia z Internetem, zamykam aplikację");
+            Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+
+                @Override
+                public void run() {
+                    finish();
+                }
+
+            }, 1000);
             return;
         }
 
@@ -223,7 +231,6 @@ public class MainActivity extends AppCompatActivity {
                                 JSONObject jsonObject;
 
                                 if(!isJSON(response)) {
-                                    Popup("Brak nowych zadań!");
                                     return;
                                 }
 
