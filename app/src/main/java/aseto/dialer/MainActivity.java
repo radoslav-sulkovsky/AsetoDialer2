@@ -179,8 +179,6 @@ public class MainActivity extends AppCompatActivity {
     private void showNotification() {
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context.getApplicationContext(), "aseto001");
 
-
-
         mBuilder.setSmallIcon(R.mipmap.ic_launcher_round);
         mBuilder.setContentTitle("Aseto Dialer");
         mBuilder.setContentText("Aplikacja jest uruchomiona");
